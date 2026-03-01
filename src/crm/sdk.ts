@@ -54,7 +54,11 @@ export class CrmSdk {
       throw new Error(response.statusText);
     }
 
-    return response.json();
+    if (response.headers.get('Content-Type')?.includes('application/json')) {
+      return response.json();
+    }
+
+    return response.text() as T;
   }
 
   public async fetchEntities(search?: string) {
@@ -212,6 +216,67 @@ export class CrmSdk {
     });
 
     return transformedResult;
+  }
+
+  public async searchWebResources(search: string, limit = 25) {
+    const escapedSearch = this.escapeFetchXmlValue(search.trim());
+    const fetchXml = `<fetch>
+      <entity name='webresource'>
+        <attribute name='webresourceid' />
+        <attribute name='name' />
+        <attribute name='displayname' />
+        <attribute name='webresourcetype' />
+        <attribute name='modifiedon' />
+        <filter type='or'>
+          <condition attribute='name' operator='like' value='%${escapedSearch}%' />
+          <condition attribute='displayname' operator='like' value='%${escapedSearch}%' />
+        </filter>
+      </entity>
+    </fetch>`;
+
+    const result = await this.fetchXml('webresourceset', fetchXml, limit);
+
+    const transformredResult = result.entities.map((item) => ({
+      id: item.webresourceid,
+      name: item.name,
+      displayName: item.displayname ?? '',
+      webresourcetype: item.webresourcetype ?? null,
+      webresourcetypeName:
+        item['webresourcetype@OData.Community.Display.V1.FormattedValue'] ?? '',
+      modifiedOn: item.modifiedon ?? '',
+    }));
+
+    return transformredResult;
+  }
+
+  public async getWebResourceContentById(webResourceId: string) {
+    const url = `${this.endpoint}/webresourceset(${webResourceId})/content/$value`;
+
+    const result = await this.fetch<string>(url);
+
+    // result is a base64 encoded string, we can decode it to get the original content
+    const decodedContent = Buffer.from(result, 'base64').toString('utf-8');
+
+    return decodedContent;
+  }
+
+  public async getWebResourceContentByName(webResourceName: string) {
+    const url = `${this.endpoint}/webresourceset?$filter=name eq '${webResourceName}'&$select=content`;
+
+    const result = await this.fetch<{ value: { content: string }[] }>(url);
+
+    if (result.value.length === 0) {
+      throw new Error(`Web resource with name ${webResourceName} not found`);
+    }
+
+    const content = result.value[0]!.content;
+
+    // content is a base64 encoded string, we can decode it to get the original content
+    const decodedContent = Buffer.from(content, 'base64').toString('utf-8');
+
+    console.log('Decoded content:', decodedContent);
+
+    return decodedContent;
   }
 
   public async fetchXml<T = any>(
