@@ -2,8 +2,9 @@
   "name": "d365-troubleshooter-mcp",
   "displayName": "Dynamics 365 Troubleshooter (MCP)",
   "description": "AI-powered troubleshooting, diagnostics and root cause analysis for Dynamics 365 & Dataverse using MCP",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "publisher": "kishanmundha",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -29,6 +30,10 @@
       {
         "command": "d365-troubleshooter.start",
         "title": "Start D365 Troubleshooter MCP"
+      },
+      {
+        "command": "d365-troubleshooter.configure",
+        "title": "Configure D365 Credentials"
       },
       {
         "command": "d365-troubleshooter.stop",

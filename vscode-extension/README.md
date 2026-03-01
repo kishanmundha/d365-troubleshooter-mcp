@@ -13,13 +13,19 @@ AI-powered troubleshooting, diagnostics, and root cause analysis for Dynamics 36
 ## Setup
 
 1. Install extension
-2. Open Settings → D365 Troubleshooter MCP
-3. Enter:
-   - Tenant ID
-   - Client ID
-   - Client Secret
-   - CRM URL
-4. Restart VS Code
+2. Run command: `Configure D365 Credentials`
+3. Fill Tenant ID, Client ID, Client Secret, and CRM URL in prompts
+4. (Optional) Open Settings → D365 Troubleshooter MCP to review values
+5. Restart VS Code
+
+Alternatively, you can configure manually in Settings:
+
+- `d365.tenantId`
+- `d365.clientId`
+- `d365.clientSecret`
+- `d365.crmUrl`
+
+If credentials are missing at startup, extension now shows actions to configure immediately.
 
 MCP server auto-starts.
 
