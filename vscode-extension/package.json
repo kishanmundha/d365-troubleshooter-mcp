@@ -1,0 +1,86 @@
+{
+  "name": "d365-troubleshooter-mcp",
+  "displayName": "Dynamics 365 Troubleshooter (MCP)",
+  "description": "AI-powered troubleshooting, diagnostics and root cause analysis for Dynamics 365 & Dataverse using MCP",
+  "version": "1.0.0",
+  "publisher": "kishanmundha",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "keywords": [
+    "dynamics",
+    "d365",
+    "crm",
+    "dataverse",
+    "mcp",
+    "copilot",
+    "troubleshooting",
+    "diagnostics",
+    "plugins",
+    "workflows"
+  ],
+  "activationEvents": [
+    "onCommand:d365-troubleshooter.start",
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "d365-troubleshooter.start",
+        "title": "Start D365 Troubleshooter MCP"
+      },
+      {
+        "command": "d365-troubleshooter.stop",
+        "title": "Stop D365 Troubleshooter MCP"
+      }
+    ],
+    "configuration": {
+      "title": "D365 Troubleshooter MCP",
+      "properties": {
+        "d365.tenantId": {
+          "type": "string",
+          "description": "Azure Tenant ID"
+        },
+        "d365.clientId": {
+          "type": "string",
+          "description": "Azure Client ID"
+        },
+        "d365.clientSecret": {
+          "type": "string",
+          "description": "Azure Client Secret"
+        },
+        "d365.crmUrl": {
+          "type": "string",
+          "description": "Dynamics 365 Organization URL"
+        },
+        "d365.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto start MCP server on VS Code startup"
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kishanmundha/d365-troubleshooter-mcp"
+  },
+  "license": "MIT",
+  "scripts": {
+    "publish": "vsce publish",
+    "build": "esbuild src/extension.ts --bundle --platform=node --target=node20 --external:vscode --outfile=dist/extension.js",
+    "prepackage": "pnpm run build",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "d365-troubleshooter-mcp": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.27.3",
+    "typescript": "^5.3.3"
+  }
+}

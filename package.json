@@ -11,6 +11,10 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kishanmundha/d365-troubleshooter-mcp"
+  },
   "scripts": {
     "dev": "tsup --dts --watch",
     "build": "tsup --dts",
