@@ -7,6 +7,10 @@
   "bin": {
     "d365-troubleshooter-mcp": "dist/bin.js"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "dev": "tsup --dts --watch",
     "build": "tsup --dts",
