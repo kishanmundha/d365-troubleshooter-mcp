@@ -22,6 +22,15 @@ export class CrmSdk {
     this.endpoint = `${DYNAMICS_365_URL}/api/data/v9.1`;
   }
 
+  private escapeFetchXmlValue(value: string): string {
+    return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&apos;');
+  }
+
   private async fetch<T = any>(url: string, options?: RequestInit): Promise<T> {
     const response = await fetch(url, {
       ...options,
@@ -90,6 +99,119 @@ export class CrmSdk {
     );
 
     return this.fetch(url.toString());
+  }
+
+  public async getObjectTypeCodeByLogicalName(
+    logicalName: string,
+  ): Promise<number | null> {
+    const url = new URL(
+      `${this.endpoint}/EntityDefinitions(LogicalName='${logicalName}')`,
+    );
+    url.searchParams.set('$select', 'ObjectTypeCode');
+
+    const result = await this.fetch(url.toString());
+    return result?.ObjectTypeCode ?? null;
+  }
+
+  public async getEntityPlugins(logicalName: string) {
+    const objectTypeCode =
+      await this.getObjectTypeCodeByLogicalName(logicalName);
+
+    if (!objectTypeCode) {
+      throw new Error(
+        `ObjectTypeCode not found for logical name: ${logicalName}`,
+      );
+    }
+
+    const fetchXml = `<fetch>
+      <entity name='sdkmessageprocessingstep'>
+        <attribute name="name" />
+        <attribute name="stage" />
+        <attribute name="mode" />
+        <attribute name="filteringattributes" />
+        <attribute name="statecode" />
+        <attribute name="impersonatinguserid" />
+        <link-entity name="sdkmessagefilter" from="sdkmessagefilterid" to="sdkmessagefilterid" alias="sdkmessagefilter">
+          <attribute name="primaryobjecttypecode" />
+          <filter type="and">
+            <condition attribute="primaryobjecttypecode" operator="eq" value="${objectTypeCode}" />
+          </filter>
+        </link-entity>
+        <link-entity name="sdkmessage" from="sdkmessageid" to="sdkmessageid" alias="sdkmessage">
+          <attribute name="name" />
+        </link-entity>
+        <filter type="and">
+          <condition attribute="name" operator="like" value="PfiCrm.BusinessRules.Steps%" />
+        </filter>
+      </entity>
+    </fetch>`;
+
+    const result = await this.fetchXml(
+      'sdkmessageprocessingsteps',
+      fetchXml,
+      100,
+    );
+
+    const fetchXmlForImages = `<fetch>
+      <entity name='sdkmessageprocessingstepimage'>
+        <attribute name="sdkmessageprocessingstepimageid" />
+        <attribute name="name" />
+        <attribute name="imagetype" />
+        <attribute name="entityalias" />
+        <attribute name="sdkmessageprocessingstepid" />
+        <attribute name="attributes" />
+        <filter type="and">
+          <condition attribute="sdkmessageprocessingstepid" operator="in">
+            ${result.entities
+              .map(
+                (step) => `<value>${step.sdkmessageprocessingstepid}</value>`,
+              )
+              .join('')}
+          </condition>
+        </filter>
+      </entity>
+    </fetch>`;
+
+    const imagesResult = await this.fetchXml(
+      'sdkmessageprocessingstepimages',
+      fetchXmlForImages,
+      100,
+    );
+
+    const transformedResult = result.entities.map((item) => {
+      const images = imagesResult.entities
+        .filter(
+          (image) =>
+            image._sdkmessageprocessingstepid_value ===
+            item.sdkmessageprocessingstepid,
+        )
+        .map((image) => ({
+          name: image.name,
+          imagetype: image.imagetype,
+          imagetypeName:
+            image['imagetype@OData.Community.Display.V1.FormattedValue'],
+          entityalias: image.entityalias,
+          attributes: image.attributes ?? '',
+        }));
+
+      return {
+        id: item.sdkmessageprocessingstepid,
+        message: item['sdkmessage.name'] ?? '',
+        mode: item.mode,
+        modeName: item['mode@OData.Community.Display.V1.FormattedValue'],
+        stage: item.stage,
+        stageName: item['stage@OData.Community.Display.V1.FormattedValue'],
+        statecode: item.statecode,
+        statecodeName:
+          item['statecode@OData.Community.Display.V1.FormattedValue'],
+        filteringattributes: item.filteringattributes ?? '',
+        primaryEntityLogicalName:
+          item['sdkmessagefilter.primaryobjecttypecode'] ?? '',
+        images,
+      };
+    });
+
+    return transformedResult;
   }
 
   public async fetchXml<T = any>(

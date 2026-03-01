@@ -4,6 +4,7 @@ import type { Implementation } from '@modelcontextprotocol/sdk/types.js';
 import { getAccessToken } from './crm/connector.js';
 import { CrmSdk } from './crm/sdk.js';
 import registerSearchEntitiesTool from './tools/search_entities.js';
+import registerGetEntityPluginsTool from './tools/get_entity_plugins.js';
 
 const serverInfo: Implementation = {
   name: 'd365-troubleshooter-mcp',
@@ -28,6 +29,7 @@ async function createServer() {
 
 function registerTools(server: McpServer, sdk: CrmSdk) {
   registerSearchEntitiesTool(server, sdk);
+  registerGetEntityPluginsTool(server, sdk);
 }
 
 export async function startServer(): Promise<void> {
