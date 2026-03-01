@@ -1,0 +1,31 @@
+{
+  "name": "d365-troubleshooter-mcp",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "d365-troubleshooter-mcp": "dist/bin.js"
+  },
+  "scripts": {
+    "dev": "tsup --dts --watch",
+    "build": "tsup --dts",
+    "type-check": "tsc --noEmit",
+    "inspect": "pnpx @modelcontextprotocol/inspector",
+    "prepack": "pnpm build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@azure/msal-node": "^5.0.5",
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3"
+  }
+}
