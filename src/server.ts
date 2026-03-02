@@ -7,6 +7,7 @@ import registerSearchEntitiesTool from './tools/search_entities.js';
 import registerGetEntityPluginsTool from './tools/get_entity_plugins.js';
 import registerSearchWebResourcesTool from './tools/search_webresources.js';
 import registerGetWebResourceContentTool from './tools/get_webresource_content.js';
+import registerFindPluginTracesTool from './tools/find_plugin_traces.js';
 
 const serverInfo: Implementation = {
   name: 'd365-troubleshooter-mcp',
@@ -32,6 +33,7 @@ async function createServer() {
 function registerTools(server: McpServer, sdk: CrmSdk) {
   registerSearchEntitiesTool(server, sdk);
   registerGetEntityPluginsTool(server, sdk);
+  registerFindPluginTracesTool(server, sdk);
   registerSearchWebResourcesTool(server, sdk);
   registerGetWebResourceContentTool(server, sdk);
 }

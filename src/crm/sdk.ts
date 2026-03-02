@@ -16,6 +16,26 @@ export interface RetrieveMultipleResult<T = any> {
   count: number;
 }
 
+export interface PluginTraceItem {
+  id: string;
+  typeName: string;
+  messageName: string;
+  primaryEntity: string;
+  pluginSetpId: string;
+  startTime: string;
+  durationMs: number | null;
+  createdOn: string;
+  messageBlock: string;
+  exceptionDetails: string;
+  operationType: number | null;
+  operationTypeName: string;
+  mode: number | null;
+  modeName: string;
+  requestId: string;
+  correlationId: string;
+  depth: number | null;
+}
+
 export class CrmSdk {
   private readonly endpoint: string;
   constructor(private readonly token: string) {
@@ -277,6 +297,115 @@ export class CrmSdk {
     console.log('Decoded content:', decodedContent);
 
     return decodedContent;
+  }
+
+  public async findPluginTraces(
+    {
+      primaryEntity,
+      pluginSetpId,
+      messageName,
+      from,
+      to,
+    }: {
+      primaryEntity?: string | undefined;
+      pluginSetpId?: string | undefined;
+      messageName?: string | undefined;
+      from?: string | undefined;
+      to?: string | undefined;
+    },
+    limit = 25,
+  ) {
+    if (!primaryEntity && !pluginSetpId) {
+      throw new Error(
+        'At least primaryEntity or pluginSetpId must be provided',
+      );
+    }
+
+    primaryEntity = this.escapeFetchXmlValue(primaryEntity?.trim() ?? '');
+    pluginSetpId = this.escapeFetchXmlValue(pluginSetpId?.trim() ?? '');
+    messageName = this.escapeFetchXmlValue(messageName?.trim() ?? '');
+
+    const filterConditions = [];
+
+    if (primaryEntity) {
+      filterConditions.push(
+        `<condition attribute='primaryentity' operator='eq' value='${primaryEntity}' />`,
+      );
+    }
+
+    if (pluginSetpId) {
+      filterConditions.push(
+        `<condition attribute='sdkmessageprocessingstepid' operator='eq' value='${pluginSetpId}' />`,
+      );
+    }
+
+    if (messageName) {
+      filterConditions.push(
+        `<condition attribute='messagename' operator='eq' value='${messageName}' />`,
+      );
+    }
+
+    if (from) {
+      filterConditions.push(
+        `<condition attribute='performanceexecutionstarttime' operator='on-or-after' value='${from}' />`,
+      );
+    }
+
+    if (to) {
+      filterConditions.push(
+        `<condition attribute='performanceexecutionstarttime' operator='on-or-before' value='${to}' />`,
+      );
+    }
+
+    const fetchXml = `<fetch top='${limit}' no-lock='true'>
+      <entity name='plugintracelog'>
+        <attribute name='plugintracelogid' />
+        <attribute name='typename' />
+        <attribute name='messagename' />
+        <attribute name='primaryentity' />
+        <attribute name='performanceexecutionduration' />
+        <attribute name='createdon' />
+        <attribute name='messageblock' />
+        <attribute name='exceptiondetails' />
+        <attribute name='pluginstepid' />
+        <attribute name='operationtype' />
+        <attribute name='mode' />
+        <attribute name='requestid' />
+        <attribute name='correlationid' />
+        <attribute name='depth' />
+        <attribute name='performanceexecutionstarttime' />
+        <order attribute='createdon' descending='true' />
+        <filter type='or'>
+          ${filterConditions.join('')}
+        </filter>
+      </entity>
+    </fetch>`;
+
+    const result = await this.fetchXml('plugintracelogs', fetchXml, limit);
+
+    const transformedResult = result.entities.map((item) => ({
+      id: item.plugintracelogid,
+      typeName: item.typename ?? '',
+      messageName: item.messagename ?? '',
+      primaryEntity: item.primaryentity ?? '',
+      pluginSetpId: item.pluginstepid,
+      startTime: item.performanceexecutionstarttime ?? '',
+      durationMs: item.performanceexecutionduration ?? null,
+      createdOn: item.createdon ?? '',
+      messageBlock: item.messageblock ?? '',
+      exceptionDetails: item.exceptiondetails ?? '',
+      operationType: item.operationtype ?? null,
+      operationTypeName:
+        item['operationtype@OData.Community.Display.V1.FormattedValue'] ?? '',
+      mode: item.mode ?? null,
+      modeName: item['mode@OData.Community.Display.V1.FormattedValue'] ?? '',
+      depth: item.depth ?? null,
+    })) as PluginTraceItem[];
+
+    return {
+      traces: transformedResult,
+      count: result.count,
+    };
   }
 
   public async fetchXml<T = any>(
