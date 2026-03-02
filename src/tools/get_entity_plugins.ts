@@ -1,4 +1,4 @@
-import type { CrmSdk, EntityReferenceBundle } from '@/crm/sdk.js';
+import type { CrmSdk } from '@/crm/sdk.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { AnySchema } from '@modelcontextprotocol/sdk/server/zod-compat.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';

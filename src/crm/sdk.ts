@@ -1,4 +1,5 @@
 import { DYNAMICS_365_URL } from '@/env.js';
+import { transformJsonToFormDefinition } from './form.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface RetrieveMultipleResult<T = any> {
@@ -406,6 +407,61 @@ export class CrmSdk {
       traces: transformedResult,
       count: result.count,
     };
+  }
+
+  public async getEntityForms(logicalName: string, limit = 25) {
+    const objectTypeCode =
+      await this.getObjectTypeCodeByLogicalName(logicalName);
+
+    // type 2 = Main form
+    // type 4 = Quick Create form
+
+    const fetchXml = `<fetch top='${limit}' no-lock='true'>
+      <entity name='systemform'>
+        <attribute name='formid' />
+        <attribute name='name' />
+        <attribute name='description' />
+        <attribute name='objecttypecode' />
+        <attribute name='type' />
+        <attribute name='isdefault' />
+        <attribute name='formactivationstate' />
+        <filter>
+          <condition attribute='objecttypecode' operator='eq' value='${objectTypeCode}' />
+          <condition attribute='type' operator='in'>
+            <value>2</value>
+            <value>4</value>
+          </condition>
+        </filter>
+      </entity>
+    </fetch>`;
+
+    const result = await this.fetchXml('systemforms', fetchXml, limit);
+
+    console.log('Fetched forms:', result.entities);
+
+    return result.entities.map((item) => ({
+      id: item.formid,
+      name: item.name ?? '',
+      description: item.description ?? '',
+      tableLogicalName: item.objecttypecode ?? '',
+      type: item.type ?? null,
+      typeName: item['type@OData.Community.Display.V1.FormattedValue'] ?? '',
+      isDefault: item.isdefault ?? null,
+      formActivationState: item.formactivationstate ?? null,
+      formActivationStateName:
+        item['formactivationstate@OData.Community.Display.V1.FormattedValue'] ??
+        '',
+    }));
+  }
+
+  public async getFormDefinitionById(formId: string) {
+    const url = `${this.endpoint}/systemforms(${formId})?$select=formjson,formxml`;
+
+    const result = await this.fetch<{
+      formjson?: string;
+    }>(url);
+
+    return transformJsonToFormDefinition(result.formjson ?? '');
   }
 
   public async fetchXml<T = any>(
