@@ -20,6 +20,8 @@ This server helps with CRM troubleshooting workflows like:
 
 - `search_entities`: Search Dataverse tables by logical or display name.
 - `get_entity_plugins`: List plugin steps registered for a specific entity.
+- `find_system_jobs`: Find system jobs (async operations) with flexible filters (failed by default).
+- `health_check_environment`: Run a quick environment health summary using system jobs and plugin traces.
 - `search_webresources`: Find web resources by name/display name.
 - `get_webresource_content`: Read decoded web resource content by ID or name.
 - Access token caching in `.crm_auth_results.json` to reduce repeated auth calls.

@@ -8,8 +8,10 @@ import registerGetEntityPluginsTool from './tools/get_entity_plugins.js';
 import registerSearchWebResourcesTool from './tools/search_webresources.js';
 import registerGetWebResourceContentTool from './tools/get_webresource_content.js';
 import registerFindPluginTracesTool from './tools/find_plugin_traces.js';
+import registerFindSystemJobsTool from './tools/find_system_jobs.js';
 import registerGetEntityFormsTool from './tools/get_entity_forms.js';
 import registerGetFormDefinationTool from './tools/get_form_defination.js';
+import registerHealthCheckEnvironmentTool from './tools/health_check_environment.js';
 
 const serverInfo: Implementation = {
   name: 'd365-troubleshooter-mcp',
@@ -36,6 +38,8 @@ function registerTools(server: McpServer, sdk: CrmSdk) {
   registerSearchEntitiesTool(server, sdk);
   registerGetEntityPluginsTool(server, sdk);
   registerFindPluginTracesTool(server, sdk);
+  registerFindSystemJobsTool(server, sdk);
+  registerHealthCheckEnvironmentTool(server, sdk);
   registerGetEntityFormsTool(server, sdk);
   registerGetFormDefinationTool(server, sdk);
   registerSearchWebResourcesTool(server, sdk);

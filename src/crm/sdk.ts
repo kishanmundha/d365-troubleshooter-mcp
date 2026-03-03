@@ -37,6 +37,25 @@ export interface PluginTraceItem {
   depth: number | null;
 }
 
+export interface SystemJobItem {
+  id: string;
+  name: string;
+  operationType: number | null;
+  operationTypeName: string;
+  stateCode: number | null;
+  stateName: string;
+  statusCode: number | null;
+  statusName: string;
+  message: string;
+  friendlyMessage: string;
+  errorCode: number | null;
+  createdOn: string;
+  startedOn: string;
+  completedOn: string;
+  regardingObjectId: string;
+  owningUserId: string;
+}
+
 export class CrmSdk {
   private readonly endpoint: string;
   constructor(private readonly token: string) {
@@ -450,6 +469,147 @@ export class CrmSdk {
         item['formactivationstate@OData.Community.Display.V1.FormattedValue'] ??
         '',
     }));
+  }
+
+  public async findSystemJobs(
+    {
+      status = 'failed',
+      operationType,
+      nameContains,
+      messageContains,
+      from,
+      to,
+    }: {
+      status?:
+        | 'failed'
+        | 'succeeded'
+        | 'in_progress'
+        | 'waiting'
+        | 'canceled'
+        | 'all';
+      operationType?: number | undefined;
+      nameContains?: string | undefined;
+      messageContains?: string | undefined;
+      from?: string | undefined;
+      to?: string | undefined;
+    },
+    limit = 25,
+  ) {
+    const statusCodeMap: Record<
+      'failed' | 'succeeded' | 'in_progress' | 'waiting' | 'canceled' | 'all',
+      number[]
+    > = {
+      failed: [31],
+      succeeded: [30],
+      in_progress: [20],
+      waiting: [10],
+      canceled: [32],
+      all: [],
+    };
+
+    const filterConditions: string[] = [];
+    const normalizedNameContains = this.escapeFetchXmlValue(
+      nameContains?.trim() ?? '',
+    );
+    const normalizedMessageContains = this.escapeFetchXmlValue(
+      messageContains?.trim() ?? '',
+    );
+    const selectedStatusCodes = statusCodeMap[status];
+
+    if (selectedStatusCodes.length === 1) {
+      filterConditions.push(
+        `<condition attribute='statuscode' operator='eq' value='${selectedStatusCodes[0]}' />`,
+      );
+    }
+
+    if (selectedStatusCodes.length > 1) {
+      filterConditions.push(`<condition attribute='statuscode' operator='in'>`);
+      selectedStatusCodes.forEach((statusCode) => {
+        filterConditions.push(`<value>${statusCode}</value>`);
+      });
+      filterConditions.push(`</condition>`);
+    }
+
+    if (typeof operationType === 'number') {
+      filterConditions.push(
+        `<condition attribute='operationtype' operator='eq' value='${operationType}' />`,
+      );
+    }
+
+    if (normalizedNameContains) {
+      filterConditions.push(
+        `<condition attribute='name' operator='like' value='%${normalizedNameContains}%' />`,
+      );
+    }
+
+    if (normalizedMessageContains) {
+      filterConditions.push(
+        `<condition attribute='message' operator='like' value='%${normalizedMessageContains}%' />`,
+      );
+    }
+
+    if (from) {
+      filterConditions.push(
+        `<condition attribute='createdon' operator='on-or-after' value='${from}' />`,
+      );
+    }
+
+    if (to) {
+      filterConditions.push(
+        `<condition attribute='createdon' operator='on-or-before' value='${to}' />`,
+      );
+    }
+
+    const fetchXml = `<fetch top='${limit}' no-lock='true'>
+      <entity name='asyncoperation'>
+        <attribute name='asyncoperationid' />
+        <attribute name='name' />
+        <attribute name='operationtype' />
+        <attribute name='statecode' />
+        <attribute name='statuscode' />
+        <attribute name='message' />
+        <attribute name='friendlymessage' />
+        <attribute name='errorcode' />
+        <attribute name='createdon' />
+        <attribute name='startedon' />
+        <attribute name='completedon' />
+        <attribute name='regardingobjectid' />
+        <attribute name='owninguser' />
+        <order attribute='createdon' descending='true' />
+        <filter type='and'>
+          ${filterConditions.join('')}
+        </filter>
+      </entity>
+    </fetch>`;
+
+    const result = await this.fetchXml('asyncoperations', fetchXml, limit);
+
+    const jobs = result.entities.map((item) => ({
+      id: item.asyncoperationid,
+      name: item.name ?? '',
+      operationType: item.operationtype ?? null,
+      operationTypeName:
+        item['operationtype@OData.Community.Display.V1.FormattedValue'] ?? '',
+      stateCode: item.statecode ?? null,
+      stateName:
+        item['statecode@OData.Community.Display.V1.FormattedValue'] ?? '',
+      statusCode: item.statuscode ?? null,
+      statusName:
+        item['statuscode@OData.Community.Display.V1.FormattedValue'] ?? '',
+      message: item.message ?? '',
+      friendlyMessage: item.friendlymessage ?? '',
+      errorCode: item.errorcode ?? null,
+      createdOn: item.createdon ?? '',
+      startedOn: item.startedon ?? '',
+      completedOn: item.completedon ?? '',
+      regardingObjectId: item._regardingobjectid_value ?? '',
+      owningUserId: item._owninguser_value ?? '',
+    })) as SystemJobItem[];
+
+    return {
+      jobs,
+      count: result.count,
+    };
   }
 
   public async getFormDefinitionById(formId: string) {
