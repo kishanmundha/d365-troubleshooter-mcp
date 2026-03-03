@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,9 +74,7 @@ jobs:
 
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true' && steps.tag.outputs.exists != 'true'
-        run: pnpm publish --no-git-checks --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --no-git-checks --access public --provenance
 
       - name: Create and push git tag
         if: steps.version.outputs.changed == 'true' && steps.tag.outputs.exists != 'true'

@@ -108,12 +108,10 @@ This repo includes a GitHub Actions workflow at `.github/workflows/release.yml` 
 
 1. runs on push to `main` when `package.json` changes,
 2. checks whether the `version` field changed,
-3. publishes to npm,
+3. publishes to npm using Trusted Publisher (OIDC),
 4. creates and pushes a git tag in the format `v<version>`.
 
-Required GitHub repository secret:
-
-- `NPM_TOKEN` (an npm automation token with publish access to this package)
+No npm token secret is required when Trusted Publisher is configured in npm for this GitHub repository.
 
 Release flow:
 
