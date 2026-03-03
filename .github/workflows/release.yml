@@ -101,5 +101,28 @@ jobs:
           TAG="v${{ steps.version.outputs.current }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG" -m "Release $TAG"
+
+          PREV_TAG=$(git tag --list "v*" --sort=-v:refname | head -n 1 || true)
+          if [[ -n "${PREV_TAG}" ]]; then
+            CHANGES=$(git log --pretty=format:'- %s (%h)' "${PREV_TAG}"..HEAD)
+          else
+            CHANGES=$(git log --pretty=format:'- %s (%h)')
+          fi
+
+          if [[ -z "${CHANGES}" ]]; then
+            CHANGES="- No commit messages found"
+          fi
+
+          {
+            echo "Release ${TAG}"
+            echo
+            if [[ -n "${PREV_TAG}" ]]; then
+              echo "Changes since ${PREV_TAG}:"
+            else
+              echo "Changes:"
+            fi
+            echo "${CHANGES}"
+          } > tag-message.txt
+
+          git tag -a "$TAG" -F tag-message.txt
           git push origin "$TAG"
