@@ -10,6 +10,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
       id-token: write
@@ -24,6 +25,9 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+
+      - name: Upgrade npm
+        run: npm install -g npm@latest
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -72,9 +76,22 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Check package exists on npm
+        if: steps.version.outputs.changed == 'true' && steps.tag.outputs.exists != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          if ! npm view "$PACKAGE_NAME" version >/dev/null 2>&1; then
+            echo "Package $PACKAGE_NAME does not exist on npm yet."
+            echo "Trusted Publisher generally requires existing package linkage in npm settings before CI publish."
+            echo "Do an initial manual publish once, then re-run this workflow for subsequent releases."
+            exit 1
+          fi
+
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true' && steps.tag.outputs.exists != 'true'
-        run: pnpm publish --no-git-checks --access public --provenance
+        run: npm publish --access public --provenance
 
       - name: Create and push git tag
         if: steps.version.outputs.changed == 'true' && steps.tag.outputs.exists != 'true'
