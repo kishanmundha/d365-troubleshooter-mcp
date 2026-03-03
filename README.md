@@ -102,6 +102,25 @@ Available scripts:
 - `pnpm type-check` – TypeScript check
 - `pnpm inspect` – launch MCP inspector
 
+## Auto publish and tagging
+
+This repo includes a GitHub Actions workflow at `.github/workflows/release.yml` that:
+
+1. runs on push to `main` when `package.json` changes,
+2. checks whether the `version` field changed,
+3. publishes to npm,
+4. creates and pushes a git tag in the format `v<version>`.
+
+Required GitHub repository secret:
+
+- `NPM_TOKEN` (an npm automation token with publish access to this package)
+
+Release flow:
+
+1. Bump `version` in `package.json`.
+2. Commit and push to `main` (or `master`).
+3. Workflow publishes the new version and creates tag `vX.Y.Z`.
+
 ## VS Code extension
 
 A companion VS Code extension exists in `vscode-extension/` for local credential configuration and MCP integration.
