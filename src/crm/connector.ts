@@ -42,7 +42,6 @@ export async function getAccessToken() {
     }
   }
 
-  global.BroadcastChannel;
   const tokenRequest = {
     scopes: [`${DYNAMICS_365_URL}/.default`],
   };

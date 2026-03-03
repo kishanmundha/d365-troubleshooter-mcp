@@ -295,8 +295,6 @@ export class CrmSdk {
     // content is a base64 encoded string, we can decode it to get the original content
     const decodedContent = Buffer.from(content, 'base64').toString('utf-8');
 
-    console.log('Decoded content:', decodedContent);
-
     return decodedContent;
   }
 
@@ -376,7 +374,7 @@ export class CrmSdk {
         <attribute name='depth' />
         <attribute name='performanceexecutionstarttime' />
         <order attribute='createdon' descending='true' />
-        <filter type='or'>
+        <filter type='and'>
           ${filterConditions.join('')}
         </filter>
       </entity>
@@ -444,10 +442,10 @@ export class CrmSdk {
       name: item.name ?? '',
       description: item.description ?? '',
       tableLogicalName: item.objecttypecode ?? '',
-      type: item.type ?? null,
+      type: item.type,
       typeName: item['type@OData.Community.Display.V1.FormattedValue'] ?? '',
-      isDefault: item.isdefault ?? null,
-      formActivationState: item.formactivationstate ?? null,
+      isDefault: item.isdefault,
+      formActivationState: item.formactivationstate,
       formActivationStateName:
         item['formactivationstate@OData.Community.Display.V1.FormattedValue'] ??
         '',

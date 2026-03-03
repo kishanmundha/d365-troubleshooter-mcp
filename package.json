@@ -29,11 +29,11 @@
   "dependencies": {
     "@azure/msal-node": "^5.0.5",
     "@modelcontextprotocol/sdk": "^1.27.1",
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^25.3.3"
+    "@types/node": "^25.3.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   }
 }
