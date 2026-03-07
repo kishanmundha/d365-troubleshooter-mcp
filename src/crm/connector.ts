@@ -4,6 +4,7 @@ import {
   DYNAMICS_365_URL,
   TENANT_ID,
 } from '@/env.js';
+import { logger } from '@/logger.js';
 import * as msal from '@azure/msal-node';
 import fs from 'fs';
 
@@ -36,14 +37,12 @@ function loadAuthResultCache() {
     const parsedData = JSON.parse(data);
 
     if (!parsedData.version) {
-      console.warn(
-        'Auth result cache file is missing version. Ignoring cache.',
-      );
+      logger.warn('Auth result cache file is missing version. Ignoring cache.');
       return;
     }
 
     if (parsedData.version !== '1.0') {
-      console.warn(
+      logger.warn(
         `Auth result cache version mismatch. Expected 1.0 but got ${parsedData.version}. Ignoring cache.`,
       );
       return;
@@ -68,7 +67,7 @@ function loadAuthResultCache() {
       saveAuthResultCache();
     }
   } catch (error) {
-    console.error('Error loading previous auth result:', error);
+    logger.error('Error loading previous auth result', error);
   }
 }
 
@@ -85,7 +84,7 @@ function saveAuthResultCache() {
       'utf-8',
     );
   } catch (error) {
-    console.error('Error saving auth result cache:', error);
+    logger.error('Error saving auth result cache', error);
   }
 }
 
@@ -127,7 +126,7 @@ export async function getAccessToken() {
       saveAuthResultCache();
     }
 
-    console.log('New token acquired');
+    logger.info('New token acquired');
 
     return authResult.accessToken;
   } catch (error) {

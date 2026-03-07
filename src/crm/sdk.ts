@@ -1,4 +1,5 @@
 import { DYNAMICS_365_URL } from '@/env.js';
+import { logger } from '@/logger.js';
 import { transformJsonToFormDefinition } from './form.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -454,8 +455,6 @@ export class CrmSdk {
 
     const result = await this.fetchXml('systemforms', fetchXml, limit);
 
-    console.log('Fetched forms:', result.entities);
-
     return result.entities.map((item) => ({
       id: item.formid,
       name: item.name ?? '',
@@ -639,10 +638,10 @@ export class CrmSdk {
         typeof error.cause === 'string' &&
         error.cause === '0x80040201'
       ) {
-        console.error('Invalid XML:', xml);
+        logger.error('Invalid XML', { xml });
       } else {
-        console.error(error);
-        console.error('XML:', xml);
+        logger.error('FetchXML request failed', error);
+        logger.error('FetchXML payload', { xml });
       }
 
       throw error;

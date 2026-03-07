@@ -40,6 +40,11 @@ Required environment variables:
 - `CLIENT_SECRET`
 - `DYNAMICS_365_URL` (example: `https://orgname.crm.dynamics.com`)
 
+Optional logging variables:
+
+- `MCP_LOG_FILE` (default: `./.d365-troubleshooter-mcp.log`)
+- `MCP_LOG_STDERR` (`true` to also mirror logs to stderr)
+
 ## Getting started
 
 Many MCP clients (Cursor, VS Code MCP clients, Claude Desktop-compatible clients) support JSON-based server configuration.
@@ -127,6 +132,7 @@ A companion VS Code extension exists in `vscode-extension/` for local credential
 
 - The server uses OAuth client credential flow via `@azure/msal-node`.
 - Auth results are cached in `.crm_auth_results.json`.
+- Runtime logs are written to `MCP_LOG_FILE` and do not write to stdout.
 - Keep secrets in your MCP client env configuration (never hardcode them in source).
 
 ## License
